@@ -102,37 +102,41 @@ if CALC_MEMORY:
 # === STYLE & AVERAGES ===
 # FIRST ROW
 # filename in yellow and shorten the headers' names
-bottom_row = str(max_row + 1)
+series_row = str(max_row + 1)
 avg_row = str(max_row + 2)
+
 for dataset in datasets:
     #  STYLING
     # The yellow ID cell
     cell              = ws[dataset.cols[0] + "1"]
-    bottom_cell       = ws[dataset.cols[0] + bottom_row]
     cell.font         = Font(bold=True, color="000000")
     cell.fill         = PatternFill(fgColor="ffff00", fill_type="solid")
+
+    bottom_cell       = ws['A' + avg_row]
+    bottom_cell.value = cell.value
     bottom_cell.font  = Font(bold=True, color="000000")
     bottom_cell.fill  = PatternFill(fgColor="ffff00", fill_type="solid")
-    bottom_cell.value = cell.value
     # skipping the first column
     for c in dataset.cols[1:]:
-        cell        = ws[c + "1"]
-        bottom_cell = ws[c + bottom_row]
-
-        cell.fill        = PatternFill(fgColor="339966", fill_type="solid")
-        bottom_cell.fill = PatternFill(fgColor="339966", fill_type="solid")
-        cell.font        = Font(bold=True, color="ffffff")
-        bottom_cell.font = Font(bold=True, color="ffffff")
+        cell = ws[c + "1"]
+        cell.fill = PatternFill(fgColor="339966", fill_type="solid")
+        cell.font = Font(bold=True, color="ffffff")
         # Beautifying the header to just include the data category
-        cell.value        = cell.value.split('\\')[-1]
-        # copying the value from top to bottom
-        bottom_cell.value = cell.value
+        cell.value = cell.value.split('\\')[-1]
+
+        if dataset == datasets[0]:
+            bottom_cell = ws[c + series_row]
+            bottom_cell.fill = PatternFill(fgColor="339966", fill_type="solid")
+            bottom_cell.font = Font(bold=True, color="ffffff")
+            # copying the value from top to bottom
+            bottom_cell.value = cell.value
 
         # === AVERAGES  ===
-        avg_cell = ws[c + avg_row]
-
-        avg_cell.value = f"=AVERAGE({c}2:{c}{max_row})"
-        avg_cell.fill  = PatternFill(fgColor="e3d27d", fill_type="solid")
+    for i in range(2, len(dataset.cols) + 1):
+        avg_cell = ws[letter(i) + avg_row]
+        avg_cell.value = f"=AVERAGE({dataset.cols[i-1]}2:{dataset.cols[i-1]}{max_row})"
+        avg_cell.fill = PatternFill(fgColor="e3d27d", fill_type="solid")
+    avg_row = str(int(avg_row) + 1)
 
 # === MAKING CHARTS ===
 # chart = BarChart()
