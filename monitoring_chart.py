@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#
-# Dominik Cholewa 2021
-# https://github.com/kikuchiyooo
-#
-# Script to automate making overviews and charts
-# based on the built-in Windows monitoring solution
-# using csv files
-#
+'''
+    Dominik Cholewa 2021
+    https://github.com/kikuchiyooo
+
+    Script to automate making overviews and charts
+    based on the built-in Windows monitoring solution
+    using csv files
+'''
 import os
 import sys
 import csv
@@ -16,18 +16,26 @@ from openpyxl.styles import Font, PatternFill
 from openpyxl.chart import BarChart, Series, Reference
 
 # === ARGUMENT MANAGEMENT ===
-if len(sys.argv) != 2:
-    exit()
-path = sys.argv[1]
+path = os.getcwd()
 files = list()
-if os.path.isdir(path):
-    for f in os.listdir(path):
-        if os.path.isfile(f):
-            f = path + '/' + f
-            if f.endswith('.csv'):
-                files.append(f)
-else:
+for f in os.listdir(path):
+    if os.path.isfile(f):
+        f = path + '/' + f
+        if f.endswith('.csv'):
+            files.append(f)
+if len(files) == 0:
+    print('no csv files found')
     sys.exit()
+
+CALC_MEMORY = False
+for i in range(1, len(sys.argv)):
+    if sys.argv[i] == '--used-mem':
+        try:
+            TOTAL_MEMORY = int(sys.argv[i+1])
+        except:
+            print('supply total memory size in MBs')
+            sys.exit()
+        CALC_MEMORY = True
 
 # === DATA SET CLASS ===
 class Dataset:
@@ -55,6 +63,8 @@ for file in files:
             line_count += 1
             if line_count == 1: # do just once but still in the loop
                 line_length += len(line) - 1
+                if CALC_MEMORY:
+                    line_length+=1
                 # defining the dataset's columns used (e.g ['A', 'B', 'C'])
                 for i in range(column, column + line_length):
                     dataset.cols.append(letter(i))
@@ -63,7 +73,10 @@ for file in files:
                 try:
                     val = float(line[i])
                 except:
-                    val = line[i]
+                    try:
+                        val = line[i]
+                    except:
+                        val = ''
                 # insert each field of the line in a separate cell
                 ws[letter(column + i) + str(line_count)] = val
         max_row = line_count if (line_count > max_row) else max_row
@@ -71,6 +84,20 @@ for file in files:
         ws[letter(column) + "1"].value = file.split('/')[-1].split('.csv')[0]
         column += line_length
     datasets.append(dataset)
+
+# === CALCULATE USED MEMORY ===
+if CALC_MEMORY:
+    TOTAL_MEMORY_CELL = 'A' + str(max_row + len(datasets) + 2)
+    ws[TOTAL_MEMORY_CELL].value = TOTAL_MEMORY
+    for dataset in datasets:
+        for c in dataset.cols:
+            if 'Dostępna pamięć' in ws[c + '1'].value:
+                free_mem_col = c
+        col = dataset.cols[-1]
+
+        ws[col + '1'].value = "Użyta pamięć (MB)"
+        for i in range(2, max_row+1):
+            ws[col + str(i)].value = f"=({TOTAL_MEMORY_CELL}-{free_mem_col}{i})"
 
 # === STYLE & AVERAGES ===
 # FIRST ROW
