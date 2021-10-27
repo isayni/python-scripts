@@ -10,7 +10,7 @@ import csv
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter as letter
 from openpyxl.styles import Font, PatternFill
-from openpyxl.chart import BarChart, Series, Reference
+from openpyxl.chart import BarChart, Reference
 
 # === ARGUMENT MANAGEMENT ===
 path = os.getcwd()
@@ -38,7 +38,6 @@ for i in range(1, len(sys.argv)):
 class Dataset:
     def __init__(self):
         self.cols  = list()
-        self.chart = BarChart()
 
 # === CREATING THE WORKBOOK ===
 wb = Workbook()
@@ -138,10 +137,23 @@ for dataset in datasets:
     avg_row = str(int(avg_row) + 1)
 
 # === MAKING CHARTS ===
-# TODO
-# chart = BarChart()
-# chart.title = "Chart"
-# chart.type = "col"
+min_row = int(series_row) + 1
+max_row = min_row + len(datasets) - 1
+chart_row = str(int(avg_row) + 1)
+cats = Reference(ws, min_col=1, min_row=min_row, max_row=max_row)
+
+for c in range(2, len(datasets[0].cols) + 1):
+    chart = BarChart()
+    chart.type = "col"
+    chart.title = ws[letter(c) + series_row].value
+
+    data = Reference(ws, min_col=c, min_row=min_row, max_row=max_row)
+
+    chart.add_data(data, from_rows=True)
+    chart.set_categories(cats)
+
+    ws.add_chart(chart, "A" + chart_row)
+    chart_row = str(int(chart_row) + 15)
 
 # === SAVING THE WORKBOOK ==
 wb.save(path + "/monitoring.xlsx")
