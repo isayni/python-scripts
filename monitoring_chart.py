@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 '''
-    Dominik Cholewa 2021
-    https://github.com/kikuchiyooo
-
     Script to automate making overviews and charts
     based on the built-in Windows monitoring solution
     using csv files
@@ -40,7 +37,7 @@ for i in range(1, len(sys.argv)):
 # === DATA SET CLASS ===
 class Dataset:
     def __init__(self):
-        self.cols = list()
+        self.cols  = list()
         self.chart = BarChart()
 
 # === CREATING THE WORKBOOK ===
@@ -48,7 +45,7 @@ wb = Workbook()
 ws = wb.active
 
 # === VARIABLES ===
-max_row = 1
+max_row  = 1
 datasets = list()
 
 # === INSERTING DATA FROM THE CSV FILES ===
@@ -63,6 +60,7 @@ for file in files:
             line_count += 1
             if line_count == 1: # do just once but still in the loop
                 line_length += len(line) - 1
+                # leave an extra column for the used memory
                 if CALC_MEMORY:
                     line_length+=1
                 # defining the dataset's columns used (e.g ['A', 'B', 'C'])
@@ -116,29 +114,31 @@ for dataset in datasets:
     bottom_cell.value = cell.value
     bottom_cell.font  = Font(bold=True, color="000000")
     bottom_cell.fill  = PatternFill(fgColor="ffff00", fill_type="solid")
+
     # skipping the first column
     for c in dataset.cols[1:]:
-        cell = ws[c + "1"]
-        cell.fill = PatternFill(fgColor="339966", fill_type="solid")
-        cell.font = Font(bold=True, color="ffffff")
+        cell       = ws[c + "1"]
+        cell.fill  = PatternFill(fgColor="339966", fill_type="solid")
+        cell.font  = Font(bold=True, color="ffffff")
         # Beautifying the header to just include the data category
         cell.value = cell.value.split('\\')[-1]
 
         if dataset == datasets[0]:
-            bottom_cell = ws[c + series_row]
-            bottom_cell.fill = PatternFill(fgColor="339966", fill_type="solid")
-            bottom_cell.font = Font(bold=True, color="ffffff")
+            bottom_cell       = ws[c + series_row]
+            bottom_cell.fill  = PatternFill(fgColor="339966", fill_type="solid")
+            bottom_cell.font  = Font(bold=True, color="ffffff")
             # copying the value from top to bottom
             bottom_cell.value = cell.value
 
         # === AVERAGES  ===
     for i in range(2, len(dataset.cols) + 1):
-        avg_cell = ws[letter(i) + avg_row]
+        avg_cell       = ws[letter(i) + avg_row]
         avg_cell.value = f"=AVERAGE({dataset.cols[i-1]}2:{dataset.cols[i-1]}{max_row})"
-        avg_cell.fill = PatternFill(fgColor="e3d27d", fill_type="solid")
+        avg_cell.fill  = PatternFill(fgColor="e3d27d", fill_type="solid")
     avg_row = str(int(avg_row) + 1)
 
 # === MAKING CHARTS ===
+# TODO
 # chart = BarChart()
 # chart.title = "Chart"
 # chart.type = "col"
