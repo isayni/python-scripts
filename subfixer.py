@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+'''
+    script to fix srt subtitle files.
+
+    delaying the timestamps, adjusting the length
+    to a stretched out movie length
+
+    creates a new file with utf-8 encoding
+'''
 import os
 import sys
 
@@ -13,9 +21,8 @@ encoding = input("encoding: ")
 factor = length/orlength
 print("\n")
 
-srt = open(srtpath, encoding=encoding, errors='ignore')
-lines = srt.readlines()
-srt.close()
+with open(srtpath, encoding=encoding, errors='ignore') as srt:
+    lines = srt.readlines()
 
 for i in range(lines.__len__()):
     if "-->" in lines[i]:
