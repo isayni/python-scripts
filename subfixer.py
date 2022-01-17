@@ -13,18 +13,18 @@ import sys
 if len(sys.argv) == 1:
     print("no subtitles file path given")
     exit()
-srtpath = os.getcwd() + '/' + sys.argv[1]
-orlength = float(input('original movie length'))
-length = float(input('your movie version length'))
-delay = float(input('delay: '))
-encoding = input("encoding: ")
-factor = length/orlength
-print("\n")
 
-with open(srtpath, encoding=encoding, errors='ignore') as srt:
+SRTPATH         = os.getcwd() + '/' + sys.argv[1]
+ORIGINAL_LENGTH = float(input('original movie length: '))
+LENGTH          = float(input('your movie version length: '))
+DELAY           = float(input('delay: '))
+ENCONDING       = input("file encoding: ")
+FACTOR          = LENGTH/ORIGINAL_LENGTH
+
+with open(SRTPATH, 'r', errors='ignore') as srt:
     lines = srt.readlines()
 
-for i in range(lines.__len__()):
+for i in range(len(lines)):
     if "-->" in lines[i]:
         # print(lines[i])
         # 00:00:00,000 --> 00:00:00,000
@@ -33,10 +33,10 @@ for i in range(lines.__len__()):
             60 + float((lines[i])[6:8]) + float((lines[i])[9:12]) * 0.001
         enseconds = float((lines[i])[17:19])*3600 + float((lines[i])[20:22]) * \
             60 + float((lines[i])[23:25]) + float((lines[i])[26:29]) * 0.001
-        stseconds*=factor
-        stseconds+=delay
-        enseconds*=factor
-        enseconds+=delay
+        stseconds*=FACTOR
+        stseconds+=DELAY
+        enseconds*=FACTOR
+        enseconds+=DELAY
         lines[i] = ("0" if int(stseconds/3600)<10 else "") + str(int(stseconds/3600)) + ":"
         stseconds -= int(stseconds/3600) * 3600
         lines[i] += ("0" if int(stseconds/60) < 10 else "") + str(int(stseconds/60)) + ":"
@@ -53,6 +53,6 @@ for i in range(lines.__len__()):
         enseconds -= int(enseconds)
         lines[i] += ("00" if int(enseconds*1000) < 10 else "0" if int(enseconds*1000) < 100 else "") + str(int(enseconds*1000)) + "\n"
 
-with open(srtpath + ".new", 'w', encoding="utf8") as f:
+with open(SRTPATH + ".new", 'w', encoding="utf8") as f:
     f.writelines(lines)
 print("done")
