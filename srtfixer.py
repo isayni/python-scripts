@@ -4,8 +4,6 @@
 
     delaying the timestamps, adjusting the length
     to a stretched out movie length
-
-    creates a new file with utf-8 encoding
 '''
 import os
 import sys
