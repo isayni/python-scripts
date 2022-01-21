@@ -14,14 +14,22 @@ from bs4 import BeautifulSoup
 
 PATH = os.getcwd()
 FILES = os.listdir(PATH)
+LANG = 'ENG'
 # which most popular option to choose
 NUMBER = 0
 
-for i in range(1, len(sys.argv)):
-    if sys.argv[i].isnumeric():
-        NUMBER = int(sys.argv[i]) - 1
+i = 1
+while i < len(sys.argv):
+    arg = sys.argv[i]
+    print(i)
+    if arg == '-l':
+        i+=1
+        LANG = sys.argv[i].upper()[0:3]
+    elif arg.isnumeric():
+        NUMBER = int(arg) - 1
     else:
-        SEARCH = sys.argv[i]
+        SEARCH = arg
+    i+=1
 
 try:
     SEARCH
@@ -30,7 +38,9 @@ except:
     exit()
 
 # searching the website for the chosen movie
-r = requests.get('https://www.opensubtitles.org/en/search2/sublanguageid-eng/moviename-' + SEARCH)
+r = requests.get(
+    f'https://www.opensubtitles.org/en/search2/sublanguageid-{LANG}/moviename-{SEARCH}'
+)
 bs = BeautifulSoup(r.text, 'lxml')
 table = bs.find('table', {'id': 'search_results'})
 row = table.find_all('tr')[1]
@@ -61,7 +71,7 @@ for row in rows:
 allOptions = sorted(allOptions, key = lambda i: i['dws'], reverse=True)
 chosen = allOptions[NUMBER]
 
-print('picking the ' + str(NUMBER + 1) + ' most popular option with ' + str(chosen['dws']) + ' downloads.')
+print(f'picking the {str(NUMBER + 1)} most popular option with {str(chosen["dws"])} downloads.')
 
 # downloading
 url = 'https://www.opensubtitles.org' + chosen['tag'].get('href')
@@ -77,6 +87,8 @@ for f in list(set(os.listdir(PATH)) - set(FILES)):
         toRemove += list(set(allFiles) - set(FILES))
 for f in toRemove:
     if f.endswith('.srt'):
-        os.rename(f, TITLE + ' - ENG.srt')
+        if LANG == 'POL':
+            LANG = 'PL'
+        os.rename(f, f'{TITLE} - {LANG}.srt')
     else:
         os.remove(f)
