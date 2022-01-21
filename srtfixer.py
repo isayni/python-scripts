@@ -15,7 +15,8 @@ LENGTH          = 1
 OVERWRITE       = False
 
 if __name__ == '__main__':
-    for i in range(1, len(sys.argv)):
+    i = 1
+    while i < len(sys.argv):
         arg = sys.argv[i]
         if   arg == '-d': # delay in seconds
             i+=1
@@ -32,6 +33,7 @@ if __name__ == '__main__':
             LENGTH = float(t[1])
         elif os.path.isfile(arg):
             SRTPATH = arg
+        i+=1
 
     try:
         SRTPATH
