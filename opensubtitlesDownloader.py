@@ -42,17 +42,21 @@ r = requests.get(
     f'https://www.opensubtitles.org/en/search2/sublanguageid-{LANG}/moviename-{SEARCH}'
 )
 bs = BeautifulSoup(r.text, 'lxml')
-table = bs.find('table', {'id': 'search_results'})
-row = table.find_all('tr')[1]
-TITLE = row.find('a').get_text().split('\n')[0]
-suffix = row.find('a').get('href')
 
-print(TITLE)
+# if there is /imdbid- in the url, that means there was only one result
+# for our query and we jumped straight to the title page, meaning that we can
+# skip this part
+if not "/imdbid-" in r.url:
+    table = bs.find('table', {'id': 'search_results'})
+    row = table.find_all('tr')[1]
+    suffix = row.find('a').get('href')
+    r = requests.get('https://www.opensubtitles.org/' + suffix)
+    bs = BeautifulSoup(r.text, 'lxml')
 
-r = requests.get('https://www.opensubtitles.org/' + suffix)
-bs = BeautifulSoup(r.text, 'lxml')
 table = bs.find(id='search_results')
 rows = table.find_all('tr')[1:]
+TITLE = rows[0].find('a').get_text().split('\n')[0]
+print(TITLE)
 
 allOptions = []
 
