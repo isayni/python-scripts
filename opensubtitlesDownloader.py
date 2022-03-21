@@ -12,6 +12,18 @@ import wget
 import zipfile
 from bs4 import BeautifulSoup
 
+def printHelp():
+    print('''a script to automate downloading movie subtitles from https://opensubtitles.org
+unzipping the package, renaming the file and deleting the remains.
+
+Usage:
+    opensubtitlesDownloader.py <movie_title> [number] [-l language]
+
+[number]:      determine which most popular option in turn to download (1 - first, 2 - second etc.)
+-l [language]: search for subtitles in given language
+-h, --help:    print this help message''')
+    exit()
+
 PATH = os.getcwd()
 FILES = os.listdir(PATH)
 LANG = 'ENG'
@@ -21,21 +33,21 @@ NUMBER = 0
 i = 1
 while i < len(sys.argv):
     arg = sys.argv[i]
-    print(i)
-    if arg == '-l':
+    if arg == '-h' or arg == '--help': # [-h]
+        printHelp()
+    elif arg == '-l': # [-l language]
         i+=1
         LANG = sys.argv[i].upper()[0:3]
-    elif arg.isnumeric():
+    elif arg.isnumeric(): # [number]
         NUMBER = int(arg) - 1
-    else:
+    else: # <movie_title>
         SEARCH = arg
     i+=1
 
 try:
     SEARCH
 except:
-    sys.stderr.write('no query given')
-    exit()
+    printHelp()
 
 # searching the website for the chosen movie
 r = requests.get(
