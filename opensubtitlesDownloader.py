@@ -105,6 +105,6 @@ for f in toRemove:
     if f.endswith('.srt'):
         if LANG == 'POL':
             LANG = 'PL'
-        os.rename(f, f'{TITLE} - {LANG}.srt')
+        os.rename(f, f'{TITLE}.{LANG.lower()}.srt')
     else:
         os.remove(f)
