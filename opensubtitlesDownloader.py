@@ -8,8 +8,9 @@
 import requests
 import os
 import sys
-import wget
 import zipfile
+import json
+import time
 from bs4 import BeautifulSoup
 
 def printHelp():
@@ -27,8 +28,14 @@ Usage:
 PATH = os.getcwd()
 FILES = os.listdir(PATH)
 LANG = 'ENG'
-# which most popular option to choose
-NUMBER = 0
+NUMBER = 0 # which most popular option to choose
+COOKIE_FILE = os.path.expanduser('~/.secret/opensubtitles_session_cookies')
+with open(COOKIE_FILE, 'r') as f:
+    try:
+        COOKIES = json.load(f)
+    except:
+        COOKIES = {}
+        print('cookies couldn\'t be loaded')
 
 i = 1
 while i < len(sys.argv):
@@ -91,7 +98,9 @@ print(f'picking the {str(NUMBER + 1)} most popular option with {str(chosen["dws"
 
 # downloading
 url = 'https://www.opensubtitles.org' + chosen['tag'].get('href')
-wget.download(url)
+filename = str(int(time.time())) + '.zip'
+file = requests.get(url, cookies=COOKIES)
+open(filename, 'wb').write(file.content)
 toRemove = []
 
 # unzipping and removing remaining files
