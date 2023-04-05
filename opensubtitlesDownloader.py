@@ -12,6 +12,7 @@ import zipfile
 import json
 import time
 from bs4 import BeautifulSoup
+from termcolor import colored
 
 def printHelp():
     print('''a script to automate downloading movie subtitles from https://opensubtitles.org
@@ -29,13 +30,13 @@ PATH = os.getcwd()
 FILES = os.listdir(PATH)
 LANG = 'ENG'
 NUMBER = 0 # which most popular option to choose
-COOKIE_FILE = os.path.expanduser('~/.secret/opensubtitles_session_cookies')
-with open(COOKIE_FILE, 'r') as f:
-    try:
-        COOKIES = json.load(f)
-    except:
-        COOKIES = {}
-        print('cookies couldn\'t be loaded')
+USE_PROXY = False
+CONFIG_DIR = os.path.expanduser('~') + '/.config/opensubtitlesDownloader'
+try:
+    with open(CONFIG_DIR + '/cookies.txt', 'r') as f:
+            COOKIES = json.load(f)
+except:
+    COOKIES = {}
 
 i = 1
 while i < len(sys.argv):
@@ -45,6 +46,18 @@ while i < len(sys.argv):
     elif arg == '-l': # [-l language]
         i+=1
         LANG = sys.argv[i].upper()[0:3]
+    elif arg == '-p': # [-l language]
+        USE_PROXY = True
+        try:
+            proxies = open(CONFIG_DIR + '/proxy_list.txt', 'r').read().splitlines()
+        except:
+            exit(f'cannot read from {CONFIG_DIR}/proxy_list.txt')
+        from random import shuffle
+        shuffle(proxies)
+        try:
+            proxy_username, proxy_password = open(CONFIG_DIR + '/proxy_auth.txt', 'r').read().splitlines()
+        except:
+            exit(f'cannot read from {CONFIG_DIR}/proxy_auth.txt')
     elif arg.isnumeric(): # [number]
         NUMBER = int(arg) - 1
     else: # <movie_title>
@@ -75,7 +88,9 @@ if not "/imdbid-" in r.url:
 table = bs.find(id='search_results')
 rows = table.find_all('tr')[1:]
 TITLE = rows[0].find('a').get_text().split('\n')[0]
-print(TITLE)
+print(colored(TITLE, 'yellow'))
+if USE_PROXY:
+    print(colored('using proxies', 'grey'))
 
 allOptions = []
 
@@ -99,7 +114,26 @@ print(f'picking the {str(NUMBER + 1)} most popular option with {str(chosen["dws"
 # downloading
 url = 'https://www.opensubtitles.org' + chosen['tag'].get('href')
 filename = str(int(time.time())) + '.zip'
-file = requests.get(url, cookies=COOKIES)
+
+if USE_PROXY:
+    for server in proxies:
+        proxy = {
+            'https': f'https://{proxy_username}:{proxy_password}@{server}'
+        }
+        try:
+            file = requests.get(url, cookies=COOKIES, proxies=proxy)
+        except requests.exceptions.ProxyError as e:
+            print(colored('bad proxy or credentials: ' + server, 'red'))
+        else:
+            # print('successful proxy: ' + server)
+            break;
+    try:
+        file
+    except:
+        exit('could not download using any of the proxy servers')
+else:
+    file = requests.get(url, cookies=COOKIES)
+
 open(filename, 'wb').write(file.content)
 toRemove = []
 
