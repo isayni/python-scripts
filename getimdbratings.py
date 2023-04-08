@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 import requests
-import os, sys
+import sys
 import json
 from bs4 import BeautifulSoup
-from myproxies import random_proxy
-
-proxy = random_proxy()
+from myproxies import random
 
 def getRatings(url):
+    proxy = random()
     ratings = []
     last_page = False
     while not last_page:

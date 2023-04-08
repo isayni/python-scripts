@@ -19,10 +19,11 @@ def printHelp():
 unzipping the package, renaming the file and deleting the remains.
 
 Usage:
-    opensubtitlesDownloader.py <movie_title> [number] [-l language]
+    opensubtitlesDownloader.py [-l language] [-p] <movie_title> [number]
 
 [number]:      determine which most popular option in turn to download (1 - first, 2 - second etc.)
 -l [language]: search for subtitles in given language
+-p:            use proxy servers to download
 -h, --help:    print this help message''')
     exit()
 
@@ -30,8 +31,9 @@ PATH = os.getcwd()
 FILES = os.listdir(PATH)
 LANG = 'ENG'
 NUMBER = 0 # which most popular option to choose
-USE_PROXY = False
+download = requests.get
 CONFIG_DIR = os.path.expanduser('~') + '/.config/opensubtitlesDownloader'
+
 try:
     with open(CONFIG_DIR + '/cookies.txt', 'r') as f:
             COOKIES = json.load(f)
@@ -46,18 +48,10 @@ while i < len(sys.argv):
     elif arg == '-l': # [-l language]
         i+=1
         LANG = sys.argv[i].upper()[0:3]
-    elif arg == '-p': # [-l language]
-        USE_PROXY = True
-        try:
-            proxies = open(CONFIG_DIR + '/proxy_list.txt', 'r').read().splitlines()
-        except:
-            exit(f'cannot read from {CONFIG_DIR}/proxy_list.txt')
-        from random import shuffle
-        shuffle(proxies)
-        try:
-            proxy_username, proxy_password = open(CONFIG_DIR + '/proxy_auth.txt', 'r').read().splitlines()
-        except:
-            exit(f'cannot read from {CONFIG_DIR}/proxy_auth.txt')
+    elif arg == '-p': # [-p]
+        from myproxies import sendRequest
+        download = sendRequest
+        print(colored('using proxies', 'grey'))
     elif arg.isnumeric(): # [number]
         NUMBER = int(arg) - 1
     else: # <movie_title>
@@ -89,8 +83,6 @@ table = bs.find(id='search_results')
 rows = table.find_all('tr')[1:]
 TITLE = rows[0].find('a').get_text().split('\n')[0]
 print(colored(TITLE, 'yellow'))
-if USE_PROXY:
-    print(colored('using proxies', 'grey'))
 
 allOptions = []
 
@@ -114,27 +106,8 @@ print(f'picking the {str(NUMBER + 1)} most popular option with {str(chosen["dws"
 # downloading
 url = 'https://www.opensubtitles.org' + chosen['tag'].get('href')
 filename = str(int(time.time())) + '.zip'
+open(filename, 'wb').write(download(url, cookies=COOKIES).content)
 
-if USE_PROXY:
-    for server in proxies:
-        proxy = {
-            'https': f'https://{proxy_username}:{proxy_password}@{server}'
-        }
-        try:
-            file = requests.get(url, cookies=COOKIES, proxies=proxy)
-        except requests.exceptions.ProxyError as e:
-            print(colored('bad proxy or credentials: ' + server, 'red'))
-        else:
-            # print('successful proxy: ' + server)
-            break;
-    try:
-        file
-    except:
-        exit('could not download using any of the proxy servers')
-else:
-    file = requests.get(url, cookies=COOKIES)
-
-open(filename, 'wb').write(file.content)
 toRemove = []
 
 # unzipping and removing remaining files
