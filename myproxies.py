@@ -15,7 +15,7 @@ def getProxies():
 
 random = lambda: getProxies()[0]
 
-def sendRequest(url: str, v=False, **kwargs) -> requests.Response:
+def get(url: str, v=False, **kwargs) -> requests.Response:
     for proxy in getProxies():
         try:
             r = requests.get(url, proxies=proxy, **kwargs)
@@ -27,4 +27,16 @@ def sendRequest(url: str, v=False, **kwargs) -> requests.Response:
             return r;
     raise requests.exceptions.ProxyError('none of the proxies worked')
 
-__all__ = ["getServers", "getProxies", "random", "sendRequest"]
+def post(url: str, v=False, **kwargs) -> requests.Response:
+    for proxy in getProxies():
+        try:
+            r = requests.post(url, proxies=proxy, **kwargs)
+        except requests.exceptions.ProxyError as e:
+            if v:
+                print(e)
+            pass
+        else:
+            return r;
+    raise requests.exceptions.ProxyError('none of the proxies worked')
+
+__all__ = ["getServers", "getProxies", "random", "get", "post"]
